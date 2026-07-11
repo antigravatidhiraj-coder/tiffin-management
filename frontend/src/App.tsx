@@ -182,10 +182,10 @@ function App() {
     setIsLoggingIn(true);
     
     setTimeout(() => {
-      if (username.trim().toLowerCase() === 'admin' && password === 'admin123') {
+      if (username.trim().toLowerCase() === 'dhiraj' && password === 'Dhiraj@123789') {
         localStorage.setItem('isLoggedIn', 'true');
         setIsLoggedIn(true);
-        toast.success('Welcome back, Admin!');
+        toast.success('Welcome back, Dhiraj!');
       } else {
         toast.error('Invalid Username or Password');
       }
