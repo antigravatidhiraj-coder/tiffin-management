@@ -22,6 +22,11 @@ function App() {
   const [deleteConfirmUser, setDeleteConfirmUser] = useState<{ id: string; name: string } | null>(null);
   const [showReportModal, setShowReportModal] = useState(false);
 
+  // Loading States
+  const [isAddingUser, setIsAddingUser] = useState(false);
+  const [isDeletingUser, setIsDeletingUser] = useState(false);
+  const [isSavingLog, setIsSavingLog] = useState(false);
+
   const currentYear = parseInt(selectedDate.split('-')[0]);
   const currentMonth = parseInt(selectedDate.split('-')[1]) - 1;
 
@@ -93,6 +98,7 @@ function App() {
     if (!newUserName.trim()) return;
 
     try {
+      setIsAddingUser(true);
       const res = await fetch(`${API_BASE}/users`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -107,6 +113,8 @@ function App() {
       }
     } catch (e) {
       toast.error('Server error while adding member');
+    } finally {
+      setIsAddingUser(false);
     }
   };
 
@@ -115,6 +123,7 @@ function App() {
     const { id, name } = deleteConfirmUser;
 
     try {
+      setIsDeletingUser(true);
       const res = await fetch(`${API_BASE}/users/${id}`, {
         method: 'DELETE'
       });
@@ -127,11 +136,14 @@ function App() {
       }
     } catch (e) {
       toast.error('Error connecting to server');
+    } finally {
+      setIsDeletingUser(false);
     }
   };
 
   const handleSave = async () => {
     try {
+      setIsSavingLog(true);
       const res = await fetch(`${API_BASE}/tiffin/mark`, {
         method: 'POST',
         headers: {
@@ -152,6 +164,8 @@ function App() {
     } catch (e) {
       console.error(e);
       toast.error('Error connecting to server');
+    } finally {
+      setIsSavingLog(false);
     }
   };
 
@@ -405,10 +419,21 @@ function App() {
 
               {users.length > 0 && (
                 <button 
-                  className="w-full mt-4 p-3 bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-500 hover:to-purple-500 text-white rounded-xl font-semibold text-sm transition-all shadow-md active:scale-[0.98]"
+                  className="w-full mt-4 p-3 bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-500 hover:to-purple-500 text-white rounded-xl font-semibold text-sm transition-all shadow-md active:scale-[0.98] disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
                   onClick={handleSave}
+                  disabled={isSavingLog}
                 >
-                  Save Log
+                  {isSavingLog ? (
+                    <>
+                      <svg className="animate-spin h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                        <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                        <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                      </svg>
+                      Saving...
+                    </>
+                  ) : (
+                    'Save Log'
+                  )}
                 </button>
               )}
             </div>
@@ -425,9 +450,17 @@ function App() {
                 />
                 <button 
                   type="submit"
-                  className="px-5 py-2.5 bg-indigo-600 hover:bg-indigo-500 text-white rounded-xl font-semibold text-sm transition-all shadow-sm"
+                  className="px-5 py-2.5 bg-indigo-600 hover:bg-indigo-500 text-white rounded-xl font-semibold text-sm transition-all shadow-sm disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+                  disabled={isAddingUser}
                 >
-                  Add
+                  {isAddingUser ? (
+                    <svg className="animate-spin h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                      <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                      <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                    </svg>
+                  ) : (
+                    'Add'
+                  )}
                 </button>
               </form>
             </div>
@@ -535,9 +568,20 @@ function App() {
               </button>
               <button 
                 onClick={confirmDeleteUser}
-                className="px-4 py-2.5 bg-red-600 hover:bg-red-500 active:bg-red-700 text-white rounded-xl font-semibold text-sm transition-all shadow-lg shadow-red-500/20"
+                className="px-4 py-2.5 bg-red-600 hover:bg-red-500 active:bg-red-700 text-white rounded-xl font-semibold text-sm transition-all shadow-lg shadow-red-500/20 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+                disabled={isDeletingUser}
               >
-                Delete Member
+                {isDeletingUser ? (
+                  <>
+                    <svg className="animate-spin h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                      <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                      <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                    </svg>
+                    Deleting...
+                  </>
+                ) : (
+                  'Delete Member'
+                )}
               </button>
             </div>
           </div>
