@@ -8,6 +8,8 @@ interface User {
   name: string;
 }
 
+const API_BASE = import.meta.env.VITE_API_URL || 'https://tiffin-backend-9g33.onrender.com';
+
 function App() {
   const [users, setUsers] = useState<User[]>([]);
   const [newUserName, setNewUserName] = useState('');
@@ -25,7 +27,7 @@ function App() {
 
   const loadUsers = async () => {
     try {
-      const res = await fetch('http://localhost:3000/users');
+      const res = await fetch(`${API_BASE}/users`);
       if (res.ok) {
         const data = await res.json();
         setUsers(data);
@@ -48,7 +50,7 @@ function App() {
   const loadSummary = async () => {
     try {
       const monthStr = selectedDate.substring(0, 7);
-      const res = await fetch(`http://localhost:3000/tiffin/summary/${monthStr}`);
+      const res = await fetch(`${API_BASE}/tiffin/summary/${monthStr}`);
       if (res.ok) {
         const data = await res.json();
         setSummary(data);
@@ -91,7 +93,7 @@ function App() {
     if (!newUserName.trim()) return;
 
     try {
-      const res = await fetch('http://localhost:3000/users', {
+      const res = await fetch(`${API_BASE}/users`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ name: newUserName.trim() })
@@ -113,7 +115,7 @@ function App() {
     const { id, name } = deleteConfirmUser;
 
     try {
-      const res = await fetch(`http://localhost:3000/users/${id}`, {
+      const res = await fetch(`${API_BASE}/users/${id}`, {
         method: 'DELETE'
       });
       if (res.ok) {
@@ -130,7 +132,7 @@ function App() {
 
   const handleSave = async () => {
     try {
-      const res = await fetch('http://localhost:3000/tiffin/mark', {
+      const res = await fetch(`${API_BASE}/tiffin/mark`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json'
