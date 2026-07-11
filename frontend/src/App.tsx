@@ -6,7 +6,7 @@ import './index.css';
 interface User {
   _id: string;
   name: string;
-}
+} 
 
 const API_BASE = import.meta.env.VITE_API_URL || 'https://tiffin-backend-9g33.onrender.com';
 
