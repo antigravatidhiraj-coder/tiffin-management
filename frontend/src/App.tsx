@@ -27,6 +27,12 @@ function App() {
   const [isDeletingUser, setIsDeletingUser] = useState(false);
   const [isSavingLog, setIsSavingLog] = useState(false);
 
+  // Auth States
+  const [isLoggedIn, setIsLoggedIn] = useState(() => localStorage.getItem('isLoggedIn') === 'true');
+  const [username, setUsername] = useState('');
+  const [password, setPassword] = useState('');
+  const [isLoggingIn, setIsLoggingIn] = useState(false);
+
   const currentYear = parseInt(selectedDate.split('-')[0]);
   const currentMonth = parseInt(selectedDate.split('-')[1]) - 1;
 
@@ -66,17 +72,19 @@ function App() {
   };
 
   useEffect(() => {
-    loadUsers();
-  }, []);
+    if (isLoggedIn) {
+      loadUsers();
+    }
+  }, [isLoggedIn]);
 
   useEffect(() => {
-    if (users.length > 0) {
+    if (isLoggedIn && users.length > 0) {
       loadSummary();
     }
-  }, [selectedDate, users]);
+  }, [selectedDate, users, isLoggedIn]);
 
   useEffect(() => {
-    if (users.length > 0) {
+    if (isLoggedIn && users.length > 0) {
       const newStatus: Record<string, boolean> = {};
       users.forEach(user => {
         const userDates = summary[user._id]?.dates || [];
@@ -84,7 +92,7 @@ function App() {
       });
       setTiffinStatus(newStatus);
     }
-  }, [selectedDate, summary, users]);
+  }, [selectedDate, summary, users, isLoggedIn]);
 
   const handleToggle = (id: string) => {
     setTiffinStatus((prev) => ({
@@ -169,6 +177,32 @@ function App() {
     }
   };
 
+  const handleLogin = (e: React.FormEvent) => {
+    e.preventDefault();
+    setIsLoggingIn(true);
+    
+    setTimeout(() => {
+      if (username.trim().toLowerCase() === 'admin' && password === 'admin123') {
+        localStorage.setItem('isLoggedIn', 'true');
+        setIsLoggedIn(true);
+        toast.success('Welcome back, Admin!');
+      } else {
+        toast.error('Invalid Username or Password');
+      }
+      setIsLoggingIn(false);
+    }, 800);
+  };
+
+  const handleLogout = () => {
+    localStorage.removeItem('isLoggedIn');
+    setIsLoggedIn(false);
+    setUsers([]);
+    setSummary({});
+    setUsername('');
+    setPassword('');
+    toast.success('Logged out successfully!');
+  };
+
   const getDaysInMonth = (year: number, month: number) => {
     return new Date(year, month + 1, 0).getDate();
   };
@@ -232,6 +266,79 @@ function App() {
     return dates;
   };
 
+  if (!isLoggedIn) {
+    return (
+      <div className="min-h-screen bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-slate-900 via-[#0f172a] to-black text-slate-200 font-sans p-4 flex flex-col justify-center items-center relative overflow-hidden">
+        
+        <ToastContainer position="top-right" autoClose={3000} theme="dark" transition={Slide} />
+
+        <div className="absolute top-0 left-1/4 w-96 h-96 bg-indigo-500/10 rounded-full blur-3xl -z-10 pointer-events-none"></div>
+        <div className="absolute bottom-0 right-1/4 w-96 h-96 bg-purple-500/5 rounded-full blur-3xl -z-10 pointer-events-none"></div>
+
+        <div className="max-w-md w-full animate-in fade-in slide-in-from-bottom-4 duration-300">
+          <div className="text-center mb-8 flex items-center justify-center gap-3">
+            <div className="p-2 rounded-xl bg-white/5 border border-white/10 shadow-2xl backdrop-blur-md">
+              <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-8 h-8 text-indigo-400">
+                <path strokeLinecap="round" strokeLinejoin="round" d="M15.362 5.214A8.252 8.252 0 0112 21 8.25 8.25 0 016.038 7.048 8.287 8.287 0 009 9.6a8.983 8.983 0 013.361-6.867 8.21 8.21 0 003 2.48z" />
+                <path strokeLinecap="round" strokeLinejoin="round" d="M12 18a3.75 3.75 0 00.495-7.467 5.99 5.99 0 00-1.925 3.546 5.974 5.974 0 01-2.133-1A3.75 3.75 0 0012 18z" />
+              </svg>
+            </div>
+            <h1 className="text-3xl font-extrabold tracking-tight text-transparent bg-clip-text bg-gradient-to-r from-indigo-400 via-purple-400 to-pink-400">
+              Tiffin Admin
+            </h1>
+          </div>
+
+          <div className="bg-slate-800/40 backdrop-blur-xl rounded-3xl p-8 border border-slate-700/50 shadow-2xl">
+            <h2 className="text-xl font-bold text-white mb-6 text-center">Login to Dashboard</h2>
+            <form onSubmit={handleLogin} className="flex flex-col gap-5">
+              <div>
+                <label className="block text-xs font-semibold text-slate-400 uppercase tracking-wider mb-2">Username</label>
+                <input 
+                  type="text" 
+                  placeholder="Enter username"
+                  className="w-full p-3.5 bg-slate-900/50 border border-slate-700 rounded-xl text-slate-100 focus:outline-none focus:ring-1 focus:ring-indigo-500 focus:border-transparent text-sm placeholder:text-slate-500"
+                  value={username}
+                  onChange={(e) => setUsername(e.target.value)}
+                  required
+                />
+              </div>
+
+              <div>
+                <label className="block text-xs font-semibold text-slate-400 uppercase tracking-wider mb-2">Password</label>
+                <input 
+                  type="password" 
+                  placeholder="Enter password"
+                  className="w-full p-3.5 bg-slate-900/50 border border-slate-700 rounded-xl text-slate-100 focus:outline-none focus:ring-1 focus:ring-indigo-500 focus:border-transparent text-sm placeholder:text-slate-500"
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  required
+                />
+              </div>
+
+              <button 
+                type="submit"
+                disabled={isLoggingIn}
+                className="w-full mt-2 p-3.5 bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-500 hover:to-purple-500 text-white rounded-xl font-semibold text-sm transition-all shadow-md active:scale-[0.98] disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+              >
+                {isLoggingIn ? (
+                  <>
+                    <svg className="animate-spin h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                      <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                      <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                    </svg>
+                    Logging in...
+                  </>
+                ) : (
+                  'Login'
+                )}
+              </button>
+            </form>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="min-h-screen bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-slate-900 via-[#0f172a] to-black text-slate-200 font-sans p-4 sm:p-6 relative overflow-hidden flex flex-col justify-center">
       
@@ -242,16 +349,27 @@ function App() {
       <div className="absolute bottom-0 right-1/4 w-96 h-96 bg-purple-500/5 rounded-full blur-3xl -z-10 pointer-events-none"></div>
 
       <div className="max-w-7xl w-full mx-auto">
-        <header className="text-center mb-6 flex items-center justify-center gap-3">
-          <div className="p-2 rounded-xl bg-white/5 border border-white/10 shadow-2xl backdrop-blur-md">
-            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-6 h-6 text-indigo-400">
-              <path strokeLinecap="round" strokeLinejoin="round" d="M15.362 5.214A8.252 8.252 0 0112 21 8.25 8.25 0 016.038 7.048 8.287 8.287 0 009 9.6a8.983 8.983 0 013.361-6.867 8.21 8.21 0 003 2.48z" />
-              <path strokeLinecap="round" strokeLinejoin="round" d="M12 18a3.75 3.75 0 00.495-7.467 5.99 5.99 0 00-1.925 3.546 5.974 5.974 0 01-2.133-1A3.75 3.75 0 0012 18z" />
-            </svg>
+        <header className="mb-6 flex items-center justify-between gap-3">
+          <div className="flex items-center gap-3">
+            <div className="p-2 rounded-xl bg-white/5 border border-white/10 shadow-2xl backdrop-blur-md">
+              <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-6 h-6 text-indigo-400">
+                <path strokeLinecap="round" strokeLinejoin="round" d="M15.362 5.214A8.252 8.252 0 0112 21 8.25 8.25 0 016.038 7.048 8.287 8.287 0 009 9.6a8.983 8.983 0 013.361-6.867 8.21 8.21 0 003 2.48z" />
+                <path strokeLinecap="round" strokeLinejoin="round" d="M12 18a3.75 3.75 0 00.495-7.467 5.99 5.99 0 00-1.925 3.546 5.974 5.974 0 01-2.133-1A3.75 3.75 0 0012 18z" />
+              </svg>
+            </div>
+            <h1 className="text-2xl sm:text-3xl font-extrabold tracking-tight text-transparent bg-clip-text bg-gradient-to-r from-indigo-400 via-purple-400 to-pink-400">
+              Tiffin Management
+            </h1>
           </div>
-          <h1 className="text-3xl font-extrabold tracking-tight text-transparent bg-clip-text bg-gradient-to-r from-indigo-400 via-purple-400 to-pink-400">
-            Tiffin Management
-          </h1>
+          <button
+            onClick={handleLogout}
+            className="px-4 py-2 bg-red-950/40 hover:bg-red-900/60 border border-red-900/50 hover:border-red-500/50 text-red-300 rounded-xl font-semibold text-xs sm:text-sm transition-all flex items-center gap-2"
+          >
+            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" className="w-4 h-4">
+              <path strokeLinecap="round" strokeLinejoin="round" d="M15.75 9V5.25A2.25 2.25 0 0013.5 3h-6a2.25 2.25 0 00-2.25 2.25v13.5A2.25 2.25 0 007.5 21h6a2.25 2.25 0 002.25-2.25V15M12 9l-3 3m0 0l3 3m-3-3h12.75" />
+            </svg>
+            Logout
+          </button>
         </header>
 
         {/* 3-Column Desktop Grid */}
